@@ -48,6 +48,12 @@
                               @"iPhone10,5" : @(iPhone8Plus),
                               @"iPhone10,3" : @(iPhoneX),
                               @"iPhone10,6" : @(iPhoneX),
+                              
+                              @"iPhone11,2" : @(iPhoneXS),
+                              @"iPhone11,4" : @(iPhoneXSMax),
+                              @"iPhone11,6" : @(iPhoneXSMax),
+                              @"iPhone11,8" : @(iPhoneXR),
+
                               @"i386"       : @(Simulator),
                               @"x86_64"     : @(Simulator),
                               
@@ -105,9 +111,18 @@
 
 + (DeviceVersion)deviceVersion
 {
-    struct utsname systemInfo;
-    uname(&systemInfo);
-    NSString *code = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+    NSString *code = nil;
+    
+#if TARGET_OS_SIMULATOR
+    code = NSProcessInfo.processInfo.environment[@"SIMULATOR_MODEL_IDENTIFIER"];
+#endif // TARGET_OS_SIMULATOR
+    
+    if (code == nil) {
+        struct utsname systemInfo;
+        uname(&systemInfo);
+        code = [NSString stringWithCString:systemInfo.machine
+                                  encoding:NSUTF8StringEncoding];
+    }
     
     DeviceVersion version = (DeviceVersion)[[self.deviceNamesByCode objectForKey:code] integerValue];
     
@@ -133,7 +148,17 @@
     } else if(screenHeight == 736) {
         return Screen5Dot5inch;
     } else if (screenHeight == 812) {
-        return Screen5Dot8inch;
+        return Screen5Dot8inch; // X / XS
+    } else if ((screenHeight == 896) && ([UIScreen mainScreen].scale == 2)) {
+        return Screen6Dot1inch; // XR
+    } else if ((screenHeight == 896) && ([UIScreen mainScreen].scale == 3)) {
+        return Screen6Dot5inch; // XS MAX
+    } else if (screenHeight == 1366) {
+        return Screen12Dot9inch;
+    } else if (screenHeight == 1112) {
+        return Screen10Dot5inch;
+    } else if (screenHeight == 1024) {
+        return Screen9Dot7inch;
     } else
         return UnknownSize;
 }
